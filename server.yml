@@ -1,0 +1,116 @@
+# ntfy server config file
+#
+# Please refer to the documentation at https://ntfy.sh/docs/config/ for details.
+# All options also support underscores (_) instead of dashes (-) to comply with the YAML spec.
+
+# Public facing base URL of the service (e.g. https://ntfy.sh or https://ntfy.example.com)
+base-url: https://ntfy.mydomain.com
+
+# If "cache-file" is set, messages are cached in a local SQLite database instead of only in-memory.
+# This allows for service restarts without losing messages in support of the since= parameter.
+#
+# The "cache-duration" parameter defines the duration for which messages will be buffered
+# before they are deleted. This is required to support the "since=..." and "poll=1" parameter.
+# To disable the cache entirely (on-disk/in-memory), set "cache-duration" to 0.
+# The cache file is created automatically, provided that the correct permissions are set.
+#
+# Check your permissions:
+#   If you are running ntfy with systemd, make sure this cache file is owned by the
+#   ntfy user and group by running: chown ntfy.ntfy <filename>.
+cache-file: /var/cache/ntfy/cache.db
+cache-duration: "2h"
+
+# If set, access to the ntfy server and API can be controlled on a granular level using
+# the 'ntfy user' and 'ntfy access' commands. See the --help pages for details, or check the docs.
+#
+# - auth-file is the SQLite user/access database; it is created automatically if it doesn't already exist
+# - auth-default-access defines the default/fallback access if no access control entry is found; it can be
+#   set to "read-write" (default), "read-only", "write-only" or "deny-all".
+#
+auth-file: /var/lib/ntfy/user.db
+
+# If set, the X-Forwarded-For header is used to determine the visitor IP address
+# instead of the remote address of the connection.
+#
+# WARNING: If you are behind a proxy, you must set this, otherwise all visitors
+#          are rate limited as if they are one.
+#
+behind-proxy: true
+
+# If enabled, clients can attach files to notifications as attachments. Minimum settings to enable attachments
+# are "attachment-cache-dir" and "base-url".
+#
+# - attachment-cache-dir is the cache directory for attached files
+# - attachment-total-size-limit is the limit of the on-disk attachment cache directory (total size)
+# - attachment-file-size-limit is the per-file attachment size limit (e.g. 300k, 2M, 100M)
+# - attachment-expiry-duration is the duration after which uploaded attachments will be deleted (e.g. 3h, 20h)
+#
+attachment-cache-dir: /var/lib/ntfy/attachments
+attachment-total-size-limit: "20M"
+attachment-file-size-limit: "250K"
+attachment-expiry-duration: "1h"
+
+# Interval in which keepalive messages are sent to the client. This is to prevent
+# intermediaries closing the connection for inactivity.
+#
+# Note that the Android app has a hardcoded timeout at 77s, so it should be less than that.
+#
+keepalive-interval: "60s"
+
+# Interval in which the manager prunes old messages, deletes topics
+# and prints the stats.
+#
+manager-interval: "10m"
+
+# Defines the root path of the web app, or disables the web app entirely.
+#
+# Can be any simple path, e.g. "app" or "/", "home" or "/app", or "/ntfy". 
+# Use "disable" or "" to disable the web app entirely.
+#
+web-root: "disable"
+
+# Rate limiting: Total number of topics before the server rejects new topics.
+#
+global-topic-limit: 100
+
+# Rate limiting: Number of subscriptions per visitor (IP address)
+#
+visitor-subscription-limit: 20
+
+# Rate limiting: Allowed GET/PUT/POST requests per second, per visitor:
+# - visitor-request-limit-burst is the initial bucket of requests each visitor has
+# - visitor-request-limit-replenish is the rate at which the bucket is refilled
+# - visitor-request-limit-exempt-hosts is a comma-separated list of hostnames, IPs or CIDRs to be
+#   exempt from request rate limiting. Hostnames are resolved at the time the server is started.
+#   Example: "1.2.3.4,ntfy.example.com,8.7.6.0/24"
+#
+visitor-request-limit-burst: 20
+visitor-request-limit-replenish: "5s"
+visitor-request-limit-exempt-hosts: ""
+
+# Rate limiting: Hard daily limit of messages per visitor and day. The limit is reset
+# every day at midnight UTC. If the limit is not set (or set to zero), the request
+# limit (see above) governs the upper limit.
+#
+visitor-message-daily-limit: 0
+
+# Metrics
+#
+# ntfy can expose Prometheus-style metrics via a /metrics endpoint, or on a dedicated listen IP/port.
+# Metrics may be considered sensitive information, so before you enable them, be sure you know what you are
+# doing, and/or secure access to the endpoint in your reverse proxy.
+#
+enable-metrics: false
+
+# Logging options
+#
+# By default, ntfy logs to the console (stderr), with an "info" log level, and in a human-readable text format.
+#
+# - log-format defines the output format, can be "text" (default) or "json"
+# - log-file is a filename to write logs to. If this is not set, ntfy logs to stderr.
+# - log-level defines the default log level, can be one of "trace", "debug", "info" (default), "warn" or "error".
+#   Be aware that "debug" (and particularly "trace") can be VERY CHATTY. Only turn them on briefly for debugging purposes.
+#
+log-level: info
+log-format: json
+log-file: /etc/ntfy/ntfy.log
